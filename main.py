@@ -22,7 +22,7 @@ from evaluation import evaluate
 
 def main():
     args = get_args()
-
+    use_ppo = args.algo == 'ppo'
     torch.manual_seed(args.seed)
     torch.cuda.manual_seed_all(args.seed)
 
@@ -86,7 +86,8 @@ def main():
             args.entropy_coef,
             lr=args.lr,
             eps=args.eps,
-            max_grad_norm=args.max_grad_norm
+            max_grad_norm=args.max_grad_norm,
+            ppo_clip_param=args.ppo_clip_param
         )
         return_distributions = True
     elif args.algo == 'tr_ppo_rb':
@@ -100,7 +101,8 @@ def main():
             args.rb_alpha,
             lr=args.lr,
             eps=args.eps,
-            max_grad_norm=args.max_grad_norm
+            max_grad_norm=args.max_grad_norm,
+            ppo_clip_param=args.ppo_clip_param
         )
         return_distributions = True
 
@@ -130,6 +132,7 @@ def main():
     start = time.time()
     num_updates = int(
         args.num_env_steps) // args.num_steps // args.num_processes
+    prev_mean_reward = None
     for j in range(num_updates):
 
         if args.use_linear_lr_decay:
@@ -171,7 +174,7 @@ def main():
         rollouts.compute_returns(next_value, args.use_gae, args.gamma,
                                  args.gae_lambda, args.use_proper_time_limits)
 
-        value_loss, action_loss, dist_entropy = agent.update(rollouts)
+        value_loss, action_loss, dist_entropy = agent.update(rollouts, use_ppo)
 
         rollouts.after_update()
 
@@ -189,6 +192,13 @@ def main():
                 getattr(utils.get_vec_normalize(envs), 'ob_rms', None)
             ], os.path.join(save_path, args.env_name + ".pt"))
 
+        mean_rewards = np.mean(episode_rewards)
+        if (prev_mean_reward is not None) and (mean_rewards < prev_mean_reward) and \
+           (use_ppo == False) and args.revert_to_ppo:
+            use_ppo = True
+            print('Revert Back to PPO Training')
+            # args.lr = 3e-4
+        prev_mean_reward = mean_rewards
         if j % args.log_interval == 0 and len(episode_rewards) > 1:
             total_num_steps = (j + 1) * args.num_processes * args.num_steps
             end = time.time()

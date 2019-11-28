@@ -17,7 +17,8 @@ class TR_PPO_RB():
                  lr=None,
                  eps=None,
                  max_grad_norm=None,
-                 use_clipped_value_loss=True):
+                 use_clipped_value_loss=True,
+                 ppo_clip_param=None):
 
         self.actor_critic = actor_critic
 
@@ -33,8 +34,9 @@ class TR_PPO_RB():
 
         self.optimizer = optim.Adam(actor_critic.parameters(), lr=lr, eps=eps)
         self.rb_alpha = rb_alpha
+        self.ppo_clip_param = ppo_clip_param
 
-    def update(self, rollouts):
+    def update(self, rollouts, use_ppo=False):
         advantages = rollouts.returns[:-1] - rollouts.value_preds[:-1]
         advantages = (advantages - advantages.mean()) / (
             advantages.std() + 1e-5)
@@ -92,9 +94,12 @@ class TR_PPO_RB():
                 ratio = torch.exp(action_log_probs -
                                   old_action_log_probs_batch)
                 surr1 = ratio * adv_targ
-
-                surr2 = (kl_divergence>=self.clip_param) * (-self.rb_alpha) * surr1 \
-                        + (kl_divergence<self.clip_param) * surr1
+                if use_ppo:
+                    surr2 = torch.clamp(ratio, 1.0 - self.ppo_clip_param,
+                                        1.0 + self.ppo_clip_param) * adv_targ
+                else:
+                    surr2 = (kl_divergence>=self.clip_param) * (-self.rb_alpha) * surr1 \
+                            + (kl_divergence<self.clip_param) * surr1
                 action_loss = -torch.min(surr1, surr2).mean()
 
                 if self.use_clipped_value_loss:

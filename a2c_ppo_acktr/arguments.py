@@ -158,6 +158,15 @@ def get_args():
         action='store_true',
         default=False,
         help='use a linear schedule on the learning rate')
+    parser.add_argument(
+        '--revert_to_ppo',
+        action='store_true'
+    )
+    parser.add_argument(
+        '--ppo_clip_param',
+        type=float
+        
+    )
     args = parser.parse_args()
 
     args.cuda = not args.no_cuda and torch.cuda.is_available()
