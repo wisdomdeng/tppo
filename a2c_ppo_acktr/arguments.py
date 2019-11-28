@@ -164,8 +164,8 @@ def get_args():
     )
     parser.add_argument(
         '--ppo_clip_param',
-        type=float
-        
+        type=float,
+        default=0.1
     )
     args = parser.parse_args()
 
