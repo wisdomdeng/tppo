@@ -32,6 +32,16 @@ parser.add_argument(
     action='store_true',
     default=False,
     help='whether to use a non-deterministic policy')
+parser.add_argument(
+    '--video_record_dir',
+    type=str,
+    default='./video'
+)
+parser.add_argument(
+    '--save_video',
+    action='store_true'
+)
+
 args = parser.parse_args()
 
 args.det = not args.non_det
@@ -51,6 +61,7 @@ render_func = get_render_func(env)
 # We need to use the same statistics for normalization as used in training
 actor_critic, ob_rms = \
             torch.load(os.path.join(args.load_dir, args.env_name + ".pt"))
+actor_critic = actor_critic.cpu()
 
 vec_norm = get_vec_normalize(env)
 if vec_norm is not None:
@@ -76,7 +87,8 @@ if args.env_name.find('Bullet') > -1:
 
 while True:
     with torch.no_grad():
-        value, action, _, recurrent_hidden_states = actor_critic.act(
+        # import ipdb; ipdb.set_trace()
+        value, action, _, recurrent_hidden_states, _ = actor_critic.act(
             obs, recurrent_hidden_states, masks, deterministic=args.det)
 
     # Obser reward and next obs
