@@ -1,5 +1,5 @@
 import numpy as np
-f = open('Walker2d_3.out', 'r')
+f = open('HalfCheetah_3.out', 'r')
 lines = f.read().splitlines()
 f.close()
 steps = []
@@ -13,4 +13,4 @@ for i in range(len(lines)):
         rewards.append(float(reward))
 
 steps_rewards = np.stack([steps, rewards])
-np.save('Walker2d_3_results.npy', steps_rewards)
+np.save('cheetah_3.npy', steps_rewards)

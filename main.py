@@ -194,7 +194,7 @@ def main():
 
         mean_rewards = np.mean(episode_rewards)
         if (prev_mean_reward is not None) and (mean_rewards < prev_mean_reward) and \
-           (use_ppo == False) and args.revert_to_ppo:
+           (use_ppo == False) and args.revert_to_ppo and j > 3:
             use_ppo = True
             print('Revert Back to PPO Training')
             # args.lr = 3e-4
