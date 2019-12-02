@@ -41,7 +41,6 @@ def main():
     envs = make_vec_envs(args.env_name, args.seed, args.num_processes,
                          args.gamma, args.log_dir, device, False)
 
-    ## Replace with our implementation
     actor_critic = Policy(
         envs.observation_space.shape,
         envs.action_space,
@@ -51,7 +50,6 @@ def main():
 
     return_distributions = False
     if args.algo == 'ppo':
-        ## Replace with our implementation
         agent = algo.PPO(
             actor_critic,
             args.clip_param,
@@ -62,7 +60,6 @@ def main():
             lr=args.lr,
             eps=args.eps,
             max_grad_norm=args.max_grad_norm)
-        ## Add implementation of ppo_kl
     elif args.algo == 'ppo_rb':
         agent = algo.PPO_RB(
             actor_critic,
